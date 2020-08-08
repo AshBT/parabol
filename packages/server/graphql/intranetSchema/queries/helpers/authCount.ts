@@ -12,8 +12,8 @@ const authCount = async (
   const afterFilter = after ? (row) => row(filterField).ge(after) : {}
   return r
     .table('User')
-    .filter(activeFilter)
     .filter(afterFilter)
+    .filter(activeFilter)
     .count()
     .run()
 }

@@ -128,7 +128,7 @@ const ColumnInner = styled('div')<{isDesktop: boolean}>(({isDesktop}) => ({
   display: isDesktop ? undefined : 'flex',
   justifyContent: 'center',
   height: '100%',
-  padding: isDesktop ? '8px 16px 16px' : undefined,
+  padding: isDesktop ? '0 0 16px' : undefined,
   paddingBottom: isDesktop ? undefined : 8,
   width: '100%'
 }))
@@ -195,7 +195,7 @@ const RetroDiscussPhase = (props: Props) => {
                   )}
                 </ColumnInner>
               </ReflectionColumn>
-              <ThreadColumn data-cy='discuss-task-column' isDesktop={isDesktop}>
+              <ThreadColumn isDesktop={isDesktop}>
                 <DiscussionThreadRoot meetingId={meetingId} threadSourceId={reflectionGroupId!} />
               </ThreadColumn>
             </ColumnsContainer>

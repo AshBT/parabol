@@ -2,6 +2,7 @@ import {GraphQLID, GraphQLInt, GraphQLNonNull} from 'graphql'
 import {OrgUserRole, TierEnum} from 'parabol-client/types/graphql'
 import getRethink from '../../../database/rethinkDriver'
 import User from '../../../database/types/User'
+import db from '../../../db'
 import {requireSU} from '../../../utils/authorization'
 import {fromEpochSeconds} from '../../../utils/epochTime'
 import segmentIo from '../../../utils/segmentIo'
@@ -9,6 +10,7 @@ import setUserTierForOrgId from '../../../utils/setUserTierForOrgId'
 import StripeManager from '../../../utils/StripeManager'
 import {DataLoaderWorker, GQLContext} from '../../graphql'
 import hideConversionModal from '../../mutations/helpers/hideConversionModal'
+import setTierForOrgUsers from '../../../utils/setTierForOrgUsers'
 import DraftEnterpriseInvoicePayload from '../types/DraftEnterpriseInvoicePayload'
 
 const getBillingLeaderUser = async (
@@ -48,12 +50,8 @@ const getBillingLeaderUser = async (
     (organizationUser) => organizationUser.role === OrgUserRole.BILLING_LEADER
   )
   const billingLeaderUserIds = billingLeaders.map(({userId}) => userId)
-  return r
-    .table('User')
-    .getAll(r.args(billingLeaderUserIds))
-    .nth(0)
-    .default(null)
-    .run()
+  const billingLeaderUsers = await db.readMany('User', billingLeaderUserIds)
+  return billingLeaderUsers[0]
 }
 
 export default {
@@ -170,8 +168,11 @@ export default {
         })
     }).run()
 
-    await setUserTierForOrgId(orgId)
-    await hideConversionModal(orgId, dataLoader)
+    await Promise.all([
+      setUserTierForOrgId(orgId),
+      setTierForOrgUsers(orgId),
+      hideConversionModal(orgId, dataLoader)
+    ])
     segmentIo.track({
       userId: user.id,
       event: 'Enterprise invoice drafted',
