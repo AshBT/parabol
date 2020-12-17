@@ -2,6 +2,7 @@ import styled from '@emotion/styled'
 import graphql from 'babel-plugin-relay/macro'
 import React from 'react'
 import {createFragmentContainer} from 'react-relay'
+import EndCheckInMutation from '~/mutations/EndCheckInMutation'
 import useAtmosphere from '../hooks/useAtmosphere'
 import useMutationProps from '../hooks/useMutationProps'
 import useRouter from '../hooks/useRouter'
@@ -9,7 +10,6 @@ import AgendaShortcutHint from '../modules/meeting/components/AgendaShortcutHint
 import MeetingCopy from '../modules/meeting/components/MeetingCopy/MeetingCopy'
 import MeetingFacilitationHint from '../modules/meeting/components/MeetingFacilitationHint/MeetingFacilitationHint'
 import MeetingPhaseHeading from '../modules/meeting/components/MeetingPhaseHeading/MeetingPhaseHeading'
-import EndNewMeetingMutation from '../mutations/EndNewMeetingMutation'
 import {NewMeetingPhaseTypeEnum} from '../types/graphql'
 import {AGENDA_ITEM_LABEL} from '../utils/constants'
 import {phaseLabelLookup} from '../utils/meetings/lookups'
@@ -53,8 +53,39 @@ const ActionMeetingLastCall = (props: Props) => {
   const endMeeting = () => {
     if (submitting) return
     submitMutation()
-    EndNewMeetingMutation(atmosphere, {meetingId}, {history, onError, onCompleted})
+    EndCheckInMutation(atmosphere, {meetingId}, {history, onError, onCompleted})
   }
+
+  const getHeadingText = () => {
+    if (endedAt && agendaItemsCompleted === 0) return <span>Nothing to see here</span>
+    else if (agendaItemsCompleted === 0) return <span>{`No ${labelAgendaItems}?`}</span>
+    else return <span>{'Last Call:'}</span>
+  }
+
+  const getMeetingCopy = () => {
+    if (endedAt && agendaItemsCompleted === 0) {
+      return <span>{`There were no ${labelAgendaItems} added to this meeting.`}</span>
+    } else if (agendaItemsCompleted === 0) {
+      return (
+        <span>
+          {`Looks like you didn’t process any ${labelAgendaItems}.`}
+          <br />
+          {`You can add ${labelAgendaItems} in the left sidebar before ending the meeting.`}
+          <br />
+          {'Simply tap on any items you create to process them.'}
+        </span>
+      )
+    } else {
+      return (
+        <span>
+          {'We’ve worked on '}
+          <b>{`${agendaItemsCompleted} ${plural(agendaItemsCompleted, AGENDA_ITEM_LABEL)}`}</b>
+          {' so far—need anything else?'}
+        </span>
+      )
+    }
+  }
+
   return (
     <MeetingContent>
       <MeetingTopBar
@@ -66,32 +97,9 @@ const ActionMeetingLastCall = (props: Props) => {
       </MeetingTopBar>
       <ErrorBoundary>
         <LastCallWrapper>
-          <MeetingPhaseHeading>
-            {agendaItemsCompleted === 0 ? (
-              <span>{`No ${labelAgendaItems}?`}</span>
-            ) : (
-              <span>{'Last Call:'}</span>
-            )}
-          </MeetingPhaseHeading>
-          {agendaItemsCompleted === 0 ? (
-            <MeetingCopy>
-              <span>
-                {`Looks like you didn’t process any ${labelAgendaItems}.`}
-                <br />
-                {`You can add ${labelAgendaItems} in the left sidebar before ending the meeting.`}
-                <br />
-                {'Simply tap on any items you create to process them.'}
-              </span>
-            </MeetingCopy>
-          ) : (
-            <MeetingCopy>
-              {'We’ve worked on '}
-              <b>{`${agendaItemsCompleted} ${plural(agendaItemsCompleted, AGENDA_ITEM_LABEL)}`}</b>
-              {' so far—need anything else?'}
-            </MeetingCopy>
-          )}
-          <AgendaShortcutHint />
-
+          <MeetingPhaseHeading>{getHeadingText()}</MeetingPhaseHeading>
+          <MeetingCopy>{getMeetingCopy()}</MeetingCopy>
+          {!endedAt && <AgendaShortcutHint />}
           {isFacilitating ? (
             <PrimaryButton
               aria-label='End Meeting'

@@ -4,7 +4,6 @@ import {TaskStatusEnum} from '../types/graphql'
  * Big stuff:
  */
 export const APP_CDN_USER_ASSET_SUBDIR = '/store'
-export const APP_MAX_AVATAR_FILE_SIZE = 1024 * 1024
 export const APP_NAME = 'Action'
 
 /* Meeting Misc. */
@@ -39,6 +38,9 @@ export const DONE = 'done'
 export const FUTURE = 'future'
 export const columnArray = [FUTURE, STUCK, ACTIVE, DONE] as TaskStatusEnum[]
 export const meetingColumnArray = [DONE, ACTIVE, STUCK, FUTURE] as TaskStatusEnum[]
+
+/* Scoping Task Search Filter */
+export const taskScopingStatusFilters = [ACTIVE, STUCK, FUTURE] as TaskStatusEnum[]
 
 /* Drag-n-Drop Items */
 export const TASK = 'task'

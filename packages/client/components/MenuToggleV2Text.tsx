@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
-import Icon from './Icon'
-import React from 'react'
+import React, {forwardRef} from 'react'
 import {PALETTE} from '~/styles/paletteV2'
+import Icon from './Icon'
 
 const MenuToggleInner = styled('div')({
   alignItems: 'center',
@@ -11,10 +11,9 @@ const MenuToggleInner = styled('div')({
   minWidth: 0
 })
 
-const GroupIcon = styled(Icon)({
+const MenuToggleIcon = styled(Icon)({
   color: PALETTE.TEXT_GRAY,
-  paddingLeft: 12,
-  paddingRight: 12
+  padding: '0 16px'
 })
 
 const MenuToggleLabel = styled('div')({
@@ -28,14 +27,14 @@ interface Props {
   label: string
   icon: string
 }
-const MenuToggleV2Text = (props: Props) => {
+const MenuToggleV2Text = forwardRef((props: Props, ref: any) => {
   const {icon, label} = props
   return (
-    <MenuToggleInner>
-      <GroupIcon>{icon}</GroupIcon>
+    <MenuToggleInner ref={ref}>
+      <MenuToggleIcon>{icon}</MenuToggleIcon>
       <MenuToggleLabel>{label}</MenuToggleLabel>
     </MenuToggleInner>
   )
-}
+})
 
 export default MenuToggleV2Text

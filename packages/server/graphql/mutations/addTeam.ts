@@ -40,10 +40,7 @@ export default {
       }
 
       // VALIDATION
-      const orgTeams = await r
-        .table('Team')
-        .getAll(orgId, {index: 'orgId'})
-        .run()
+      const orgTeams = await r.table('Team').getAll(orgId, {index: 'orgId'}).run()
 
       const orgTeamNames = orgTeams.map((team) => !team.isArchived && team.name)
       const {
@@ -109,7 +106,7 @@ export default {
 
       return {
         ...data,
-        authToken: encodeAuthToken(new AuthToken({tms, sub: viewerId}))
+        authToken: encodeAuthToken(new AuthToken({tms, sub: viewerId, rol: authToken.rol}))
       }
     }
   )

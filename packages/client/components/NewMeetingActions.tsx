@@ -2,12 +2,14 @@ import styled from '@emotion/styled'
 import graphql from 'babel-plugin-relay/macro'
 import React from 'react'
 import {createFragmentContainer} from 'react-relay'
+import StartCheckInMutation from '~/mutations/StartCheckInMutation'
+import StartRetrospectiveMutation from '~/mutations/StartRetrospectiveMutation'
 import {NewMeetingActions_team} from '~/__generated__/NewMeetingActions_team.graphql'
 import useAtmosphere from '../hooks/useAtmosphere'
 import useBreakpoint from '../hooks/useBreakpoint'
 import useMutationProps from '../hooks/useMutationProps'
 import useRouter from '../hooks/useRouter'
-import StartNewMeetingMutation from '../mutations/StartNewMeetingMutation'
+import StartSprintPokerMutation from '../mutations/StartSprintPokerMutation'
 import {Breakpoint} from '../types/constEnums'
 import {MeetingTypeEnum} from '../types/graphql'
 import Icon from './Icon'
@@ -63,7 +65,13 @@ const NewMeetingActions = (props: Props) => {
   const onStartMeetingClick = () => {
     if (submitting) return
     submitMutation()
-    StartNewMeetingMutation(atmosphere, {teamId, meetingType}, {history, onError, onCompleted})
+    if (meetingType === MeetingTypeEnum.poker) {
+      StartSprintPokerMutation(atmosphere, {teamId}, {history, onError, onCompleted})
+    } else if (meetingType === MeetingTypeEnum.action) {
+      StartCheckInMutation(atmosphere, {teamId}, {history, onError, onCompleted})
+    } else {
+      StartRetrospectiveMutation(atmosphere, {teamId}, {history, onError, onCompleted})
+    }
   }
 
   return (

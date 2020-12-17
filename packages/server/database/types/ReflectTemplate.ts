@@ -1,27 +1,18 @@
-import shortid from 'shortid'
+import {MeetingTypeEnum} from 'parabol-client/types/graphql'
+import {SharingScopeEnum} from '../../../client/types/graphql'
+import MeetingTemplate from './MeetingTemplate'
 
 interface Input {
   name: string
   teamId: string
+  scope?: SharingScopeEnum
+  orgId: string
+  parentTemplateId?: string
+  lastUsedAt?: Date
 }
 
-export default class ReflectTemplate {
-  id: string
-  createdAt: Date
-  isActive: boolean
-  updatedAt: Date
-  name: string
-  teamId: string
-  lastUsedAt: Date | undefined
-
+export default class ReflectTemplate extends MeetingTemplate {
   constructor(input: Input) {
-    const {name, teamId} = input
-    const now = new Date()
-    this.id = shortid.generate()
-    this.createdAt = now
-    this.isActive = true
-    this.name = name
-    this.teamId = teamId
-    this.updatedAt = now
+    super({...input, type: MeetingTypeEnum.retrospective})
   }
 }

@@ -5,6 +5,285 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 This CHANGELOG follows conventions [outlined here](http://keepachangelog.com/).
 
+## 5.28.0 2020-Dec-17
+
+### Added
+
+- Added batch support for feature flags #4446
+- Pre-validate jira field mappers #4445
+- Adds Parabol stories to Sprint Poker Estimate phase #4420
+
+### Changed
+
+- Moved HubSpot Segment function inside the app #4451
+- Scale editor UI refined #4435 #4430
+- Sprint Poker UI refined #4416
+- Bump ini from 1.3.5 to 1.3.7 #4434
+
+### Fixed
+
+- Fixed reactji spacing #4427
+
+## 5.27.0 2020-Dec-09
+
+### Added
+
+- Support avatar image uploads (#3957)
+- Poker reveal voting button implemented (#4392)
+- Use next button for participants (#4349)
+- Implement final score for poker meeting (#4396)
+- Add summary for poker meeting (#4397)
+- Implement adding Parabol task during scope phase of poker meeting (#4359)
+
+### Fixed
+
+- Poker meeting fixups (#4381)
+
+## 5.26.0 2020-Dec-2
+
+### Added
+
+- Set Sprint Poker final score and push it to Jira (#4368)
+
+### Changed
+
+- Updated Sprint Poker drawer discussion thread (#4364)
+- Sprint Poker UI clean-up (#4377)
+
+### Fixed
+
+- Multiple Sprint Poker bug fixes & polish (#4376)
+- Fixed remove agenda item & setAppLocation bugs (#4380)
+
+## 5.25.1 2020-Nov-19
+
+### Fixed
+
+- Reverted back to using header to determine client IP
+
+## 5.25.0 2020-Nov-18
+
+### Added
+
+- Sprint Poker template UI w/o scales (#4310)
+- Poker peekers (#4334)
+
+### Changed
+
+- Upgraded uWS to v18, now with upgrade callback (#4357)
+- Invitation lifespan to 30 days (#4353)
+- Initial Poker template has a single dimension (#4347)
+- Added curve to poker deck (#4337)
+
+### Fixed
+
+- A handle of client-side bugs found in Sentry, likely due to Relay (#4354)
+- Centered meeting bottom control bar (#4344)
+- Language for invitation expiration (#4341)
+
+## 5.24.0 2020-Nov-12
+
+### Added
+
+- Sprint Poker UI deck animations #4334
+
+### Changed
+
+- Sprint Poker estimate stage display in sidebar #4318
+- Refactor atlassian jira auth #4312
+- Increased invitation expiration time to 30 days #4335
+
+### Fixed
+
+- Race condition occurring when a retro meeting starts while a checkin is taking place #4329
+
+### Deprecated
+
+- Deprecated the `startNewMeeting` and `endNewMeeting` mutations in favour of meeting specific mutations #4330
+
+## 5.23.0 2020-Nov-04
+
+### Added
+
+- Poker estimate mutations #4306
+- Added `voteForPokerStory` mutation #4304
+- Add new Jira issues in poker scope phase #4282
+- Outlook email parser #4288
+- Added Sprint Poker template scale backend #4232
+- Parabol scope search #4274
+- Adds poker card deck #4278
+
+### Changed
+
+- Bumped `mediasoup-client` package to `^3.6.21` #4292
+- New meeting view UI controls updated #4275
+
+### Fixed
+
+- Fixed bug when copying retro templates #4294
+- Task migration hotfix #4302
+- Fixed summary topic order #4206
+
+## 5.22.0 2020-Oct-13
+
+### Added
+
+- CLI to create new mutations (#4270)
+- Jira Issue card in Poker Estimate Phase (#4262, #4245)
+- meetingCount to User for HubSpot (#4259)
+- Search Menu and Persisted Query Menu for Jira Scope Phase (#4256)
+- MediaSoup package (#4204)
+
+### Fixed
+
+- Icebreaker Editing & flexbox issue for Safari (#4254)
+- Check-in Agenda State (#4242)
+- Removing template prompt bug (#4236)
+
+## 5.21.0 2020-Oct-07
+
+### Added
+
+- Added undo grouping button to completed gouping phase #4253
+- Sprint Poker: Jira integration, search, and scoping implemented #4241, #4231
+- Added new starter templates for retro meetings #4220
+
+### Changed
+
+- Friendlier UI for tasks without assignees #4164
+
+### Fixed
+
+- Remove link to offensive rally song
+
+## 5.20.1 2020-Oct-06
+
+### Fixed
+
+- SegmentIo client page call signature for Google Analytics
+
+## 5.20.0 2020-Sep-30
+
+### Added
+
+- Remove shared templates by archived teams #4201
+- Added tab access for due date #4135
+- Poker Jira front-end (behind feature flag) #4158
+
+### Changed
+
+- New user task view #4105
+- Multi-connection user presence with Redis #4147
+- Bump GraphQL to v15 #4193
+
+### Fixed
+
+- Bug fix for first item in menu #4200
+- Filter out teamIds in backup organization #4221
+- Assign team task card to viewer #4223
+
+## 5.19.1 2020-Sep-25
+
+### Added
+
+- Publish timeline events when a meeting ends (#4179)
+
+### Fixed
+
+- Toggle timestamp bug in task casks (#4187)
+- Corrected Segment Google Analytics schema (#4190)
+- Demo end meeting bug (#4192)
+
+## 5.18.1 2020-Sep-18
+
+### Fixed
+
+- Remove trailing slash from intranet graphql url to fix graphiql
+
+## 5.18.0 2020-Sep-16
+
+### Added
+
+- robots.txt to nginx (#4160)
+- Retro Template Illustations (#4172)
+- Revisit Check-in meetings (#4020)
+
+### Fixed
+
+- Invite UI Copy (#4168)
+- Bump Node to v14 (#4154)
+
+## 5.17.0 2020-Sep-10
+
+### Added
+
+- Production Dockerfile (#4103)
+- Base scaffolding for new sprint poker meeting (#4113)
+- Beginnings of frontend scaffolding for new sprint poker meeting (#4141)
+- Enable fetching data from Parabol org for local development (#4089)
+
+### Fixed
+
+- Fix dev server hmr (#4134)
+- Fix various Hubspot Segment bugs (#4142)
+- Hotfix for on-premise deployment regarding SAML (#4126)
+- Improved UI via automatic parsing for bulk email invite (#4131)
+- Fix control bar undefined bug (#4121)
+- Fix connect presence logic (#4149)
+
+### Changed
+
+- Make enableSAMLForDomain an upsert (#4087)
+- Set Google Analytics clientId to Segment anonymous ID (#4117)
+- Exclude timeline events from uninteresting teams (#4132)
+
+## 5.16.0 2020-Aug-28
+
+### Added
+
+- Show who is commenting (#4050)
+- New integration test DB tarball (#4078)
+- Sprint Poker meeting type in new meeting carousel behind a feature flag (#4104)
+
+### Fixed
+
+- Bottom bar cover and floating snackbar (#4036)
+- Discussion styling thread with long URL link; Lightened up the grey "ready" checkmark in meeting control bar (#4094)
+- A couple of good fixes for invitation workflow (#4082)
+
+## 5.15.1 2020-Aug-21
+
+### Fixed
+
+- Fix emoji pop up causing page lock up (#4096)
+
+## 5.15.0 2020-Aug-21
+
+### Added
+
+- backupOrganization private schema query (#4089)
+- logging for redis timeout errors (#4095)
+
+### Fixed
+
+- More robust invoicing for multiple unpause on the same user (#4089)
+
+## 5.14.0 2020-Aug-14
+
+### Added
+
+- Shared Templates (#3942)
+- DB tables for TemplateDimension and TemplateScale (#4042)
+- Archived Items Checkbox on Task View (#4035)
+
+### Fixed
+
+- Refactor CustomPhaseItem to ReflectPrmpt (#4053)
+- Disabled editing and due date slection on archived cards (#4047)
+- Segment client initated events (#3942)
+- Summaries show groups even if meeting was ended early (#3956)
+- Menu navigation keyboard shortcuts wrap around (#4056)
+
 ## 5.13.1 2020-Aug-06
 
 ### Fixed

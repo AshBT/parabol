@@ -17,7 +17,7 @@ import PhaseHeaderDescription from './PhaseHeaderDescription'
 import PhaseHeaderTitle from './PhaseHeaderTitle'
 import PhaseWrapper from './PhaseWrapper'
 import {RetroMeetingPhaseProps} from './RetroMeeting'
-import StageTimerDisplay from './RetroReflectPhase/StageTimerDisplay'
+import StageTimerDisplay from './StageTimerDisplay'
 
 interface Props extends RetroMeetingPhaseProps {
   meeting: RetroGroupPhase_meeting
@@ -39,7 +39,7 @@ const RetroGroupPhase = (props: Props) => {
           <PhaseHeaderDescription>{'Drag cards to group by common topics'}</PhaseHeaderDescription>
         </MeetingTopBar>
         <PhaseWrapper>
-          <StageTimerDisplay meeting={meeting} />
+          <StageTimerDisplay meeting={meeting} canUndo={true} />
           <MeetingPhaseWrapper>
             <GroupingKanban meeting={meeting} phaseRef={phaseRef} />
           </MeetingPhaseWrapper>

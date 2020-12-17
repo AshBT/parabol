@@ -93,9 +93,6 @@ const initDemoUser = ({preferredName, email, picture}: BaseUser, idx: number) =>
   return {
     id,
     viewerId: id,
-    atlassianAuth: {isActive: true, accessToken: '123'},
-    githubAuth: {isActive: true, accessToken: '123'},
-    connectedSockets: [`socket${idx}`],
     createdAt: now,
     email,
     featureFlags: {
@@ -106,22 +103,11 @@ const initDemoUser = ({preferredName, email, picture}: BaseUser, idx: number) =>
     facilitatorName: preferredName,
     inactive: false,
     isConnected: true,
-    lastSeenAtURL: `/meet/${RetroDemo.MEETING_ID}`,
+    lastSeenAtURLs: [`/meet/${RetroDemo.MEETING_ID}`],
     lastSeenAt: now,
     rasterPicture: picture,
     picture: picture,
     preferredName,
-    suggestedIntegrations: {
-      hasMore: true,
-      items: [
-        makeSuggestedIntegrationJira(JiraDemoKey),
-        makeSuggestedIntegrationGitHub(GitHubDemoKey)
-      ]
-    },
-    allAvailableIntegrations: [
-      makeSuggestedIntegrationJira(JiraDemoKey),
-      makeSuggestedIntegrationJira(JiraSecretKey)
-    ],
     tms: [demoTeamId]
   }
 }
@@ -149,7 +135,8 @@ const initSlackAuth = (userId) => ({
   slackTeamName: 'demoTeam',
   slackUserId: 'demoUserId',
   slackUserName: 'Demo Slack User',
-  id: 'demoSlackUser'
+  id: 'demoSlackUser',
+  notifications: [initSlackNotification(userId)]
 })
 
 const initDemoTeamMember = ({id: userId, preferredName, picture}, idx) => {
@@ -158,14 +145,27 @@ const initDemoTeamMember = ({id: userId, preferredName, picture}, idx) => {
     __typename: 'TeamMember',
     email: 'you@parabol.co',
     id: teamMemberId,
-    checkInOrder: idx,
     teamMemberId,
     isLead: idx === 0,
     isSelf: idx === 0,
     picture: picture,
     preferredName,
-    slackAuth: initSlackAuth(userId),
-    slackNotifications: [initSlackNotification(userId)],
+    integrations: {
+      atlassian: {isActive: true, accessToken: '123'},
+      github: {isActive: true, accessToken: '123'},
+      slack: initSlackAuth(userId),
+    },
+    suggestedIntegrations: {
+      hasMore: true,
+      items: [
+        makeSuggestedIntegrationJira(JiraDemoKey),
+        makeSuggestedIntegrationGitHub(GitHubDemoKey)
+      ]
+    },
+    allAvailableIntegrations: [
+      makeSuggestedIntegrationJira(JiraDemoKey),
+      makeSuggestedIntegrationJira(JiraSecretKey)
+    ],
     teamId: demoTeamId,
     userId
   }
@@ -253,6 +253,7 @@ const initPhases = (teamMembers) => {
       phaseType: REFLECT,
       focusedPromptId: null,
       meetingId: RetroDemo.MEETING_ID,
+      teamId: demoTeamId,
       reflectPrompts: [
         {
           id: 'startId',
@@ -371,7 +372,7 @@ const initNewMeeting = (organization, teamMembers, meetingMembers) => {
     viewerMeetingMember,
     reflectionGroups: [] as any[],
     votesRemaining: teamMembers.length * 5,
-    phases: initPhases(teamMembers),
+    phases: initPhases(teamMembers) as any[],
     summarySentAt: null,
     totalVotes: MeetingSettingsThreshold.RETROSPECTIVE_TOTAL_VOTES_DEFAULT,
     maxVotesPerGroup: MeetingSettingsThreshold.RETROSPECTIVE_MAX_VOTES_PER_GROUP_DEFAULT,
@@ -407,8 +408,12 @@ const initDB = (botScript) => {
     ; (teamMember as any).team = team
   })
   team.meetingSettings.team = team as any
+  newMeeting.commentCount = 0
+  newMeeting.reflectionCount = 0
+  newMeeting.taskCount = 0
   newMeeting.team = team as any
   newMeeting.teamId = team.id
+  newMeeting.topicCount = 0
   newMeeting.settings = team.meetingSettings as any
   return {
     meetingMembers,

@@ -7,15 +7,21 @@ import VideoControls from '../../../../components/VideoControls'
 import useAtmosphere from '../../../../hooks/useAtmosphere'
 import useBreakpoint from '../../../../hooks/useBreakpoint'
 import useInitialRender from '../../../../hooks/useInitialRender'
-import {StreamUserDict} from '../../../../hooks/useSwarm'
 import useTransition, {TransitionStatus} from '../../../../hooks/useTransition'
 import {DECELERATE} from '../../../../styles/animation'
 import {meetingAvatarMediaQueries} from '../../../../styles/meeting'
 import {PALETTE} from '../../../../styles/paletteV2'
 import {Breakpoint} from '../../../../types/constEnums'
-import MediaSwarm from '../../../../utils/swarm/MediaSwarm'
+import MediaRoom from '../../../../utils/mediaRoom/MediaRoom'
 import {NewMeetingAvatarGroup_meeting} from '../../../../__generated__/NewMeetingAvatarGroup_meeting.graphql'
 import NewMeetingAvatar from './NewMeetingAvatar'
+import {
+  PeersState,
+  ProducersState,
+  ConsumersState,
+  RoomState,
+  getConsumersForPeer
+} from '../../../../utils/mediaRoom/reducerMediaRoom'
 
 const MeetingAvatarGroupRoot = styled('div')({
   alignItems: 'center',
@@ -45,7 +51,7 @@ const OverlappingBlock = styled('div')({
 const OverflowCount = styled('div')<{status: TransitionStatus}>(({status}) => ({
   opacity: status === TransitionStatus.MOUNTED || status === TransitionStatus.EXITING ? 0 : 1,
   transition: `all 300ms ${DECELERATE}`,
-  backgroundColor: PALETTE.BACKGROUND_BLUE,
+  backgroundColor: PALETTE.BACKGROUND_BLUE_LIGHT,
   borderRadius: '100%',
   color: '#FFFFFF',
   fontSize: 11,
@@ -76,9 +82,12 @@ const OverflowCount = styled('div')<{status: TransitionStatus}>(({status}) => ({
 
 interface Props {
   meeting: NewMeetingAvatarGroup_meeting
-  camStreams: StreamUserDict
-  swarm: MediaSwarm | null
+  mediaRoom: MediaRoom | null
   allowVideo: boolean
+  producers: ProducersState
+  consumers: ConsumersState
+  peers: PeersState
+  room: RoomState
 }
 
 const MAX_AVATARS_DESKTOP = 7
@@ -87,19 +96,19 @@ const OVERFLOW_AVATAR = {key: 'overflow'}
 const NewMeetingAvatarGroup = (props: Props) => {
   const atmosphere = useAtmosphere()
   const {viewerId} = atmosphere
-  const {swarm, meeting, camStreams, allowVideo} = props
+  const {mediaRoom, meeting, allowVideo, peers, producers, consumers, room} = props
   const {id: meetingId, team} = meeting
   const {id: teamId, teamMembers} = team
   const isDesktop = useBreakpoint(Breakpoint.SINGLE_REFLECTION_COLUMN)
 
   // all connected teamMembers except self
-  // TODO: filter by team members who are actually viewing “this” meeting view
   const connectedTeamMembers = useMemo(() => {
     return teamMembers
       .filter((teamMember) => {
         return (
           teamMember.userId === viewerId ||
-          (teamMember.user.lastSeenAtURL === `/meet/${meetingId}` && teamMember.user.isConnected)
+          (teamMember.user.lastSeenAtURLs?.includes(`/meet/${meetingId}`) &&
+            teamMember.user.isConnected)
         )
       })
       .sort((a, b) =>
@@ -122,9 +131,10 @@ const NewMeetingAvatarGroup = (props: Props) => {
   return (
     <MeetingAvatarGroupRoot>
       <VideoControls
+        room={room}
         allowVideo={allowVideo}
-        swarm={swarm}
-        localStreamUI={camStreams[atmosphere.viewerId]}
+        mediaRoom={mediaRoom}
+        producers={producers}
       />
 
       {tranChildren.map((teamMember) => {
@@ -138,14 +148,21 @@ const NewMeetingAvatarGroup = (props: Props) => {
             </OverlappingBlock>
           )
         }
+        const userId = teamMember.child.userId
+        const isSelf = userId == viewerId
+        const peerProducers = isSelf ? Object.values(producers) : []
+        const peerConsumers = isSelf ? [] : getConsumersForPeer(userId, peers, consumers)
+
         return (
           <OverlappingBlock key={teamMember.child.id}>
             <NewMeetingAvatar
               teamMember={teamMember.child}
               onTransitionEnd={teamMember.onTransitionEnd}
               status={isInit ? TransitionStatus.ENTERED : teamMember.status}
-              streamUI={camStreams[teamMember.child.userId]}
-              swarm={swarm}
+              peerProducers={peerProducers || []}
+              peerConsumers={peerConsumers || []}
+              mediaRoom={mediaRoom}
+              isSelf={isSelf}
             />
           </OverlappingBlock>
         )
@@ -167,14 +184,13 @@ export default createFragmentContainer(NewMeetingAvatarGroup, {
       id
       team {
         id
-        teamMembers(sortBy: "checkInOrder") {
+        teamMembers {
           ...AddTeamMemberAvatarButton_teamMembers
           id
-          checkInOrder
           user {
             isConnected
             lastSeenAt
-            lastSeenAtURL
+            lastSeenAtURLs
           }
           userId
           ...NewMeetingAvatar_teamMember

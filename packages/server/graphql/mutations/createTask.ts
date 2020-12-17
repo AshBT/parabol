@@ -55,10 +55,11 @@ const validateTaskMeetingId = async (
 }
 
 export const validateTaskUserId = async (
-  userId: string,
+  userId: string | null | undefined,
   teamId: string,
   dataLoader: DataLoaderWorker
 ) => {
+  if (!userId) return undefined
   const teamMemberId = toTeamMemberId(teamId, userId)
   const teamMember = await dataLoader.get('teamMembers').load(teamMemberId)
   return teamMember ? undefined : 'Invalid user ID'
@@ -104,18 +105,17 @@ const handleAddTaskNotifications = async (
   task: Task,
   viewerId: string,
   teamId: string,
-  subOptions: SubOptions,
-  dataLoader: DataLoaderWorker
+  subOptions: SubOptions
 ) => {
   const r = await getRethink()
   const {id: taskId, content, tags, userId} = task
-  const usersIdsToIgnore = await getUsersToIgnore(viewerId, teamId, dataLoader)
+  const usersIdsToIgnore = await getUsersToIgnore(viewerId, teamId)
 
   // Handle notifications
   // Almost always you start out with a blank card assigned to you (except for filtered team dash)
   const changeAuthorId = toTeamMemberId(teamId, viewerId)
   const notificationsToAdd = [] as NotificationTaskInvolves[]
-  if (viewerId !== userId && !usersIdsToIgnore.includes(userId)) {
+  if (userId && viewerId !== userId && !usersIdsToIgnore.includes(userId)) {
     notificationsToAdd.push(
       new NotificationTaskInvolves({
         involvement: 'ASSIGNEE',
@@ -202,7 +202,6 @@ export default {
       userId
     } = newTask
     const threadSource = newTask.threadSource as ThreadSourceEnum | null
-    // const {teamId, userId, content} = validNewTask
     if (!isTeamMember(authToken, teamId)) {
       return standardError(new Error('Team not found'), {userId: viewerId})
     }
@@ -256,14 +255,10 @@ export default {
         .coerceTo('array') as unknown) as ITeamMember[]
     }).run()
 
-    handleAddTaskNotifications(
-      teamMembers,
-      task,
-      viewerId,
-      teamId,
-      {operationId, mutatorId},
-      dataLoader
-    ).catch()
+    handleAddTaskNotifications(teamMembers, task, viewerId, teamId, {
+      operationId,
+      mutatorId
+    }).catch()
 
     sendToSentryTaskCreated(meetingId, viewerId, teamId, !!threadParentId, dataLoader).catch()
     return {taskId}

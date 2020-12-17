@@ -17,6 +17,7 @@ import normalizeRawDraftJS from 'parabol-client/validation/normalizeRawDraftJS'
 import {ITeamMember} from 'parabol-client/types/graphql'
 import getUsersToIgnore from './helpers/getUsersToIgnore'
 import {SubscriptionChannel} from 'parabol-client/types/constEnums'
+import extractTextFromDraftString from 'parabol-client/utils/draftjs/extractTextFromDraftString'
 
 const DEBOUNCE_TIME = ms('5m')
 
@@ -62,7 +63,7 @@ export default {
       return {error: {message: 'Task not found'}}
     }
     const {teamId, userId} = task
-    const nextUserId = inputUserId || userId
+    const nextUserId = inputUserId === undefined ? userId : inputUserId
     const nextTeamId = inputTeamId || teamId
     if (!isTeamMember(authToken, teamId) || !isTeamMember(authToken, nextTeamId)) {
       return standardError(new Error('Team not found'), {userId: viewerId})
@@ -73,7 +74,6 @@ export default {
         return standardError(new Error('Invalid user ID'), {userId: viewerId})
       }
     }
-
     // RESOLUTION
     const isSortOrderUpdate =
       updatedTask.sortOrder !== undefined && Object.keys(updatedTask).length === 2
@@ -84,6 +84,7 @@ export default {
       status: status || task.status,
       sortOrder: sortOrder || task.sortOrder,
       content: content ? validContent : task.content,
+      plaintextContent: content ? extractTextFromDraftString(validContent) : task.plaintextContent,
       updatedAt: isSortOrderUpdate ? task.updatedAt : now
     })
 
@@ -134,7 +135,7 @@ export default {
         .coerceTo('array') as unknown) as ITeamMember[]
     }).run()
     // TODO: get users in the same location
-    const usersToIgnore = await getUsersToIgnore(viewerId, teamId, dataLoader)
+    const usersToIgnore = await getUsersToIgnore(viewerId, teamId)
     if (!newTask) return standardError(new Error('Already updated task'), {userId: viewerId})
 
     // send task updated messages

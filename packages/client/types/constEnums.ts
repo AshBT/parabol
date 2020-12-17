@@ -92,6 +92,7 @@ export const enum ExternalLinks {
   PRICING_LINK = 'https://www.parabol.co/pricing/',
   GETTING_STARTED_RETROS = 'https://www.parabol.co/resources/retrospective-meetings',
   GETTING_STARTED_CHECK_INS = 'https://www.parabol.co/resources/check-in-meetings',
+  GETTING_STARTED_SPRINT_POKER = 'https://www.parabol.co/resources/sprint-poker-meetings',
   RESOURCES = 'https://www.parabol.co/resources',
   SUPPORT = 'https://www.parabol.co/support',
   TEAM = 'https://www.parabol.co/team/'
@@ -129,7 +130,7 @@ export const enum Layout {
   LAYOUT_GRID = 8, // 1x
   ROW_GUTTER = 16, // 2x
   SETTINGS_MAX_WIDTH = 768,
-  TASK_COLUMNS_MAX_WIDTH = 1304 // (4 x 296 card max-width) + (5 x 24 - gutters around cols)
+  TASK_COLUMNS_MAX_WIDTH = 1360
 }
 
 export const enum LoaderSize {
@@ -164,6 +165,28 @@ export const enum MeetingControlBarEnum {
 export const enum MeetingLabels {
   TIME_LIMIT = 'Time Limit',
   TIMER = 'Timer'
+}
+
+export const enum PokerCards {
+  HEIGHT = 175,
+  WIDTH = 125,
+  OVERLAP = 96,
+  MAX_VALUE = 2147483647,
+  // the angle in degrees from the middle of the deck to a deck edge (0-90)
+  TILT = 8,
+  // number of pixels from the middle of the circle below the fold to the middle of the card (0-2x innerHeight)
+  RADIUS = 1200,
+  // the % of the first & last card that sits below the fold (0-1)
+  MAX_HIDDEN = .35,
+  PASS_CARD = 'Pass',
+  QUESTION_CARD = '?',
+  DELETED_CARD = '#',
+  AVATAR_WIDTH = 46,
+  AVATAR_BORDER = 3
+}
+export const enum UserTaskViewFilterLabels {
+  ALL_TEAMS = 'All Teams',
+  ALL_TEAM_MEMBERS = 'All Team Members'
 }
 
 export const enum MeetingSettingsThreshold {
@@ -273,21 +296,32 @@ export const enum TierLabel {
 }
 
 export const enum Threshold {
+  MAX_NUMBER_OF_TASKS_TO_LOAD = 1000,
   AUTO_PAUSE = 2592000000, // 30 days
   EMAIL_VERIFICATION_LIFESPAN = 86400000, // 1 day
   JWT_LIFESPAN = 2592000000, // 30 days
-  MASS_INVITATION_TOKEN_LIFESPAN = 86400000, // 1 day
+  MASS_INVITATION_TOKEN_LIFESPAN = 2592000000, // 30 days
+  TEAM_INVITATION_LIFESPAN = 2592000000, // 30 days
   MAX_FREE_TEAMS = 10,
   MAX_MONTHLY_PAUSES = 4,
   MAX_ACCOUNT_PASSWORD_ATTEMPTS = 10,
   MAX_ACCOUNT_DAILY_PASSWORD_RESETS = 3,
+  MAX_AVATAR_FILE_SIZE = 1024 * 1024,
   MAX_DAILY_PASSWORD_RESETS = 5,
   MAX_DAILY_PASSWORD_ATTEMPTS = 100,
   MAX_REFLECTION_PROMPTS = 12,
+  MAX_POKER_TEMPLATE_DIMENSIONS = 12,
+  MAX_POKER_TEMPLATE_SCALES = 12,
+  MAX_POKER_SCALE_VALUES = 20,
+  MAX_RETRO_TEAM_TEMPLATES = 20,
+  MAX_POKER_TEAM_TEMPLATES = 20,
   MAX_REACTJIS = 12,
+  MAX_POKER_STORIES = 50,
   REFRESH_JWT_AFTER = 1296000000, // 15 days
   RESET_PASSWORD_LIFESPAN = 86400000, // 1 day
-  VERIFY_TOKEN_LIFESPAN = 2592000000 // 30 days
+  VERIFY_TOKEN_LIFESPAN = 2592000000, // 30 days
+  UPCOMING_INVOICE_EMAIL_WARNING = 345600000, // 4 days
+  UPCOMING_INVOICE_TIME_VALID = 120000 // 2 minutes
 }
 
 export const enum Times {
@@ -328,4 +362,16 @@ export const enum ZIndex {
 
 export const enum AuthTokenRole {
   SUPER_USER = 'su'
+}
+
+export const enum SprintPokerDefaults {
+  DEFAULT_TEMPLATE_ID = 'estimatedEffortTemplate',
+  DEFAULT_SCALE_ID = 'fibonacciScale',
+  JIRA_FIELD_DEFAULT = 'Story point estimate',
+  JIRA_FIELD_LEGACY_DEFAULT = 'Story Points',
+  JIRA_FIELD_COMMENT = '__comment',
+  JIRA_FIELD_COMMENT_LABEL = 'As Comment',
+  JIRA_FIELD_NULL = '',
+  JIRA_FIELD_NULL_LABEL = 'Do Not Update'
+
 }

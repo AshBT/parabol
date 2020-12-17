@@ -1,22 +1,34 @@
-import {GraphQLFloat, GraphQLID, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString} from 'graphql'
+import {
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString
+} from 'graphql'
 import {ThreadSourceEnum} from 'parabol-client/types/graphql'
 import connectionDefinitions from '../connectionDefinitions'
 import {GQLContext} from '../graphql'
 import AgendaItem from './AgendaItem'
 import GraphQLISO8601Type from './GraphQLISO8601Type'
 import PageInfoDateCursor from './PageInfoDateCursor'
+import Story, {storyFields} from './Story'
 import TaskEditorDetails from './TaskEditorDetails'
 import TaskIntegration from './TaskIntegration'
 import TaskStatusEnum from './TaskStatusEnum'
 import Team from './Team'
+import TaskEstimate from './TaskEstimate'
 import Threadable, {threadableFields} from './Threadable'
+import ThreadSource from './ThreadSource'
 
-const Task = new GraphQLObjectType<any, GQLContext, any>({
+const Task = new GraphQLObjectType<any, GQLContext>({
   name: 'Task',
   description: 'A long-term task shared across the team, assigned to a single user ',
-  interfaces: () => [Threadable],
+  interfaces: () => [Threadable, ThreadSource, Story],
+  isTypeOf: ({status}) => !!status,
   fields: () => ({
     ...threadableFields(),
+    ...storyFields(),
     agendaItem: {
       type: AgendaItem,
       description: 'The agenda item that the task was created in, if any',
@@ -40,6 +52,11 @@ const Task = new GraphQLObjectType<any, GQLContext, any>({
       type: GraphQLISO8601Type,
       description: 'a user-defined due date'
     },
+    estimates: {
+      type: GraphQLNonNull(GraphQLList(GraphQLNonNull(TaskEstimate))),
+      description: 'A list of estimates for the story, created in a poker meeting',
+      resolve: ({estimates}) => estimates || []
+    },
     editors: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(TaskEditorDetails))),
       description:
@@ -58,6 +75,10 @@ const Task = new GraphQLObjectType<any, GQLContext, any>({
     doneMeetingId: {
       type: GraphQLID,
       description: 'the foreign key for the meeting the task was marked as complete'
+    },
+    plaintextContent: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: 'the plain text content of the task'
     },
     sortOrder: {
       type: new GraphQLNonNull(GraphQLFloat),
@@ -82,15 +103,25 @@ const Task = new GraphQLObjectType<any, GQLContext, any>({
         return dataLoader.get('teams').load(teamId)
       }
     },
+    title: {
+      type: GraphQLNonNull(GraphQLString),
+      description: 'The first block of the content',
+      resolve: ({plaintextContent}) => {
+        const firstBreak = plaintextContent.indexOf('\n')
+        const endIndex = firstBreak > -1 ? firstBreak : plaintextContent.length
+        return plaintextContent.slice(0, endIndex)
+      }
+    },
     userId: {
-      type: new GraphQLNonNull(GraphQLID),
+      type: GraphQLID,
       description:
-        '* The userId, index useful for server-side methods getting all tasks under a user'
+        '* The userId, index useful for server-side methods getting all tasks under a user. This can be null if the task is not assigned to anyone.'
     },
     user: {
-      type: GraphQLNonNull(require('./User').default),
-      description: 'The user the task is assigned to',
+      type: require('./User').default,
+      description: 'The user the task is assigned to. Null if it is not assigned to anyone.',
       resolve: ({userId}, _args, {dataLoader}) => {
+        if (!userId) return null
         return dataLoader.get('users').load(userId)
       }
     }

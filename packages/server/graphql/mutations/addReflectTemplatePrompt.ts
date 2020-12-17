@@ -22,14 +22,14 @@ const addReflectTemplatePrompt = {
     const r = await getRethink()
     const operationId = dataLoader.share()
     const subOptions = {operationId, mutatorId}
-    const template = await r
-      .table('ReflectTemplate')
-      .get(templateId)
-      .run()
+    const template = await dataLoader.get('meetingTemplates').load(templateId)
     const viewerId = getUserId(authToken)
 
     // AUTH
-    if (!template || !isTeamMember(authToken, template.teamId) || !template.isActive) {
+    if (!template || !template.isActive) {
+      return standardError(new Error('Template not found'), {userId: viewerId})
+    }
+    if (!isTeamMember(authToken, template.teamId)) {
       return standardError(new Error('Team not found'), {userId: viewerId})
     }
 
@@ -40,7 +40,7 @@ const addReflectTemplatePrompt = {
       .getAll(teamId, {index: 'teamId'})
       .filter({
         templateId,
-        isActive: true
+        removedAt: null
       })
       .run()
     if (activePrompts.length >= Threshold.MAX_REFLECTION_PROMPTS) {
@@ -48,7 +48,8 @@ const addReflectTemplatePrompt = {
     }
 
     // RESOLUTION
-    const sortOrder = Math.max(...activePrompts.map((prompt) => prompt.sortOrder)) + 1 + dndNoise()
+    const sortOrder =
+      Math.max(0, ...activePrompts.map((prompt) => prompt.sortOrder)) + 1 + dndNoise()
     const pickedColors = activePrompts.map((prompt) => prompt.groupColor)
     const availableNewColor = palettePickerOptions.find(
       (color) => !pickedColors.includes(color.hex)
@@ -59,7 +60,8 @@ const addReflectTemplatePrompt = {
       sortOrder,
       question: `New prompt #${activePrompts.length + 1}`,
       description: '',
-      groupColor: availableNewColor?.hex ?? PALETTE.PROMPT_GREEN
+      groupColor: availableNewColor?.hex ?? PALETTE.PROMPT_GREEN,
+      removedAt: null
     })
 
     await r

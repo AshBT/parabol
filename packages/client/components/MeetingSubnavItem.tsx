@@ -20,8 +20,8 @@ const ItemRoot = styled('div')<ItemRootProps>(
     backgroundColor: isActive
       ? PALETTE.BACKGROUND_NAV_LIGHT_ACTIVE
       : isDragging
-      ? PALETTE.BACKGROUND_NAV_LIGHT_HOVER
-      : 'transparent',
+        ? PALETTE.BACKGROUND_NAV_LIGHT_HOVER
+        : 'transparent',
     borderRadius: '0 4px 4px 0',
     color: PALETTE.TEXT_MAIN,
     display: 'flex',
@@ -54,10 +54,14 @@ const ItemLabel = styled('div')<{isComplete: boolean}>(({isComplete}) => ({
   lineHeight,
   paddingLeft: 56,
   textDecoration: isComplete ? 'line-through' : undefined,
-  wordBreak: 'break-word'
+  wordBreak: 'break-word',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'pre'
 }))
 
 const ItemMeta = styled('div')({
+  alignItems: 'center',
   alignContent: 'center',
   display: 'flex',
   height: lineHeight,

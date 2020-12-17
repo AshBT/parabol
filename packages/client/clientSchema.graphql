@@ -12,6 +12,22 @@ extend type ActionMeeting {
   showSidebar: Boolean!
 }
 
+type ParabolSearchQuery {
+  id: String!
+  queryString: String
+  statusFilters: [TaskStatusEnum!]
+}
+
+extend type PokerMeeting {
+  isCommentUnread: Boolean!
+  isRightDrawerOpen: Boolean!
+  localPhase: NewMeetingPhase!
+  localStage: NewMeetingStage!
+  showSidebar: Boolean!
+  jiraSearchQuery: JiraSearchQuery!
+  parabolSearchQuery: ParabolSearchQuery!
+}
+
 extend type RetrospectiveMeeting {
   isAnonymousComment: Boolean
   isViewerDragInProgress: Boolean
@@ -22,6 +38,7 @@ extend type RetrospectiveMeeting {
 
 extend type Team {
   teamMemberFilter: TeamMember
+  editingScaleId: ID
 }
 
 extend type User {
@@ -30,7 +47,6 @@ extend type User {
   dashSearch: String
   pageName: String
   snackbarOffset: Int
-  teamFilter: Team
 }
 
 extend type Task {
@@ -52,10 +68,6 @@ extend type RetroReflection {
 
 extend type ReflectPrompt {
   editorIds: [ID!]
-}
-
-extend type RetrospectiveMeetingSettings {
-  activeTemplateId: String
 }
 
 extend interface NewMeetingStage {
@@ -80,4 +92,8 @@ extend type UpdatesStage {
 
 extend type AgendaItemsStage {
   localScheduledEndTime: String
+}
+
+extend type EstimateStage {
+  finalScoreError: String
 }

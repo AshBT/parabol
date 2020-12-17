@@ -1,4 +1,5 @@
 import {MeetingTypeEnum} from 'parabol-client/types/graphql'
+
 import GenericMeetingPhase from './GenericMeetingPhase'
 import Meeting from './Meeting'
 
@@ -9,6 +10,7 @@ interface Input {
   phases: GenericMeetingPhase[]
   facilitatorUserId: string
   showConversionModal?: boolean
+  templateId: string
   totalVotes: number
   maxVotesPerGroup: number
 }
@@ -22,6 +24,7 @@ export default class MeetingRetrospective extends Meeting {
   // end meeting stats
   commentCount?: number
   taskCount?: number
+  templateId: string
   topicCount?: number
   reflectionCount?: number
   constructor(input: Input) {
@@ -32,6 +35,7 @@ export default class MeetingRetrospective extends Meeting {
       name,
       phases,
       facilitatorUserId,
+      templateId,
       totalVotes,
       maxVotesPerGroup
     } = input
@@ -46,5 +50,6 @@ export default class MeetingRetrospective extends Meeting {
     this.totalVotes = totalVotes
     this.maxVotesPerGroup = maxVotesPerGroup
     this.showConversionModal = showConversionModal
+    this.templateId = templateId
   }
 }

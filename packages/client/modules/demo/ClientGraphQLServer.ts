@@ -54,7 +54,10 @@ export type DemoReflection = Omit<
   isHumanTouched: boolean
 }
 
-export type DemoReflectionGroup = Omit<IRetroReflectionGroup, 'team' | 'reflections' | 'retroPhaseItemId' | 'phaseItem'> & {
+export type DemoReflectionGroup = Omit<
+  IRetroReflectionGroup,
+  'team' | 'reflections' | 'retroPhaseItemId' | 'phaseItem'
+> & {
   reflectionGroupId: string
   reflections: DemoReflection[]
 }
@@ -76,7 +79,7 @@ interface DemoEvents {
 }
 
 interface GQLDemoEmitter {
-  new(): StrictEventEmitter<EventEmitter, DemoEvents>
+  new (): StrictEventEmitter<EventEmitter, DemoEvents>
 }
 
 const makeReflectionGroupThread = () => ({
@@ -120,7 +123,7 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
   getUnlockedStages(stageIds: string[]) {
     const unlockedStages = [] as INewMeetingStage[]
     this.db.newMeeting.phases!.forEach((phase) => {
-      ; (phase.stages as any).forEach((stage) => {
+      ;(phase.stages as any).forEach((stage) => {
         if (stageIds.includes(stage.id)) {
           unlockedStages.push(stage)
         }
@@ -217,6 +220,7 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
       return {
         viewer: {
           ...this.db.users[0],
+          teamMember: this.db.teamMembers[0],
           team: this.db.team
         }
       }
@@ -366,7 +370,7 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
       }
       return {createGitHubIssue: data}
     },
-    CreateJiraIssueMutation: ({projectKey, taskId}, userId) => {
+    CreateJiraTaskIntegrationMutation: ({projectKey, taskId}, userId) => {
       const task = this.db.tasks.find((task) => task.id === taskId)
       // if the human deleted the task, exit fast
       if (!task) return null
@@ -381,14 +385,14 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
       })
 
       const data = {
-        __typename: 'CreateJiraIssuePayload',
+        __typename: 'CreateJiraTaskIntegrationPayload',
         error: null,
         task
       }
       if (userId !== demoViewerId) {
         this.emit(TASK, data)
       }
-      return {createJiraIssue: data}
+      return {createJiraTaskIntegration: data}
     },
     CreateReflectionMutation: async (
       {input: {content, promptId, sortOrder, id, groupId}},
@@ -440,6 +444,7 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
       const reflectionGroup = {
         __typename: 'RetroReflectionGroup',
         commentCount: 0,
+        commentors: null,
         id: reflectionGroupId,
         reflectionGroupId,
         smartTitle,
@@ -485,6 +490,27 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
         this.emit(SubscriptionChannel.MEETING, data)
       }
       return {createReflection: data}
+    },
+    EditCommentingMutation: (
+      {
+        isCommenting,
+        meetingId,
+        threadId
+      }: {isCommenting: boolean; meetingId: string; threadId: string},
+      userId
+    ) => {
+      const commentor = this.db.users.find((user) => user.id === userId)
+      const data = {
+        isCommenting,
+        commentor,
+        meetingId,
+        threadId,
+        __typename: 'EditCommentingPayload'
+      }
+      if (userId !== demoViewerId) {
+        this.emit(SubscriptionChannel.MEETING, data)
+      }
+      return {editCommenting: data}
     },
     EditReflectionMutation: (
       {promptId, isEditing}: {promptId: string; isEditing: boolean},
@@ -535,10 +561,10 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
       const remainingReflections = this.db.reflections.filter((reflection) => reflection.isActive)
       const unlockedStageIds = remainingReflections.length
         ? unlockAllStagesForPhase(
-          this.db.newMeeting.phases as any,
-          NewMeetingPhaseTypeEnum.group,
-          true
-        )
+            this.db.newMeeting.phases as any,
+            NewMeetingPhaseTypeEnum.group,
+            true
+          )
         : []
 
       const unlockedStages = this.getUnlockedStages(unlockedStageIds)
@@ -729,8 +755,10 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
     },
     SetSlackNotificationMutation: ({slackChannelId, slackNotificationEvents}, userId) => {
       const teamMember = this.db.teamMembers.find((teamMember) => teamMember.userId === userId)!
-      const {slackNotifications} = teamMember
-      const filteredNotifications = slackNotifications.filter((notification) =>
+      const {integrations} = teamMember
+      const {slack} = integrations
+      const {notifications} = slack
+      const filteredNotifications = notifications.filter((notification) =>
         slackNotificationEvents.includes(notification.event)
       )
       filteredNotifications.forEach((notification) => {
@@ -1357,7 +1385,7 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
       }
       return {dragDiscussionTopic: data}
     },
-    EndNewMeetingMutation: ({meetingId}, userId) => {
+    EndRetrospectiveMutation: ({meetingId}, userId) => {
       const phases = this.db.newMeeting.phases as NewMeetingPhase[]
       const lastPhase = phases[phases.length - 1] as IDiscussPhase
       const currentStage = lastPhase.stages.find((stage) => stage.startAt && !stage.endAt)
@@ -1378,13 +1406,14 @@ class ClientGraphQLServer extends (EventEmitter as GQLDemoEmitter) {
         isKill: !currentStage,
         removedTaskIds: [],
         removedSuggestedActionId: null,
+        timelineEvent: null,
         updatedTasks: this.db.tasks,
-        __typename: 'EndNewMeetingPayload'
+        __typename: 'EndRetrospectiveSuccess'
       }
       if (userId !== demoViewerId) {
         this.emit(TEAM, data)
       }
-      return {endNewMeeting: data}
+      return {endRetrospective: data}
     },
     InviteToTeamMutation: ({invitees}) => {
       return {inviteToTeam: {invitees}}

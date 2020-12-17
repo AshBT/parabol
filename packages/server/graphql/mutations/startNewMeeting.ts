@@ -24,6 +24,7 @@ import {startSlackMeeting} from './helpers/notifySlack'
 export default {
   type: new GraphQLNonNull(StartNewMeetingPayload),
   description: 'Start a new meeting',
+  deprecationReason: 'Using more specfic start[meetingType] instead',
   args: {
     teamId: {
       type: new GraphQLNonNull(GraphQLID),
@@ -77,7 +78,7 @@ export default {
       const meetingSettings = (await dataLoader
         .get('meetingSettingsByType')
         .load({teamId, meetingType})) as MeetingSettingsRetrospective
-      const {totalVotes, maxVotesPerGroup} = meetingSettings
+      const {totalVotes, maxVotesPerGroup, selectedTemplateId} = meetingSettings
       meeting = new MeetingRetrospective({
         teamId,
         meetingCount,
@@ -85,7 +86,8 @@ export default {
         showConversionModal,
         facilitatorUserId: viewerId,
         totalVotes,
-        maxVotesPerGroup
+        maxVotesPerGroup,
+        templateId: selectedTemplateId
       })
     } else {
       meeting = new MeetingAction({
@@ -97,44 +99,29 @@ export default {
     }
     const teamMembers = await dataLoader.get('teamMembersByTeamId').load(meeting.teamId)
     const meetingMembers = createMeetingMembers(meeting, teamMembers)
-    await r
-      .table('NewMeeting')
-      .insert(meeting)
-      .run()
+    await r.table('NewMeeting').insert(meeting).run()
 
     // Disallow accidental starts (2 meetings within 2 seconds)
     const newActiveMeetings = await dataLoader.get('activeMeetingsByTeamId').load(teamId)
     const otherActiveMeeting = newActiveMeetings.find((activeMeeting) => {
       const {createdAt, id} = activeMeeting
       if (id === meeting.id || activeMeeting.meetingType !== meetingType) return false
-      return meetingType === EMeetingTypeEnum.action || createdAt > Date.now() - DUPLICATE_THRESHOLD
+      return (
+        meetingType === EMeetingTypeEnum.action ||
+        createdAt.getTime() > Date.now() - DUPLICATE_THRESHOLD
+      )
     })
     if (otherActiveMeeting) {
-      await r
-        .table('NewMeeting')
-        .get(meeting.id)
-        .delete()
-        .run()
+      await r.table('NewMeeting').get(meeting.id).delete().run()
       return {error: {message: 'Meeting already started'}}
     }
     const agendaItems = await dataLoader.get('agendaItemsByTeamId').load(teamId)
     const agendaItemIds = agendaItems.map(({id}) => id)
 
     await Promise.all([
-      r
-        .table('MeetingMember')
-        .insert(meetingMembers)
-        .run(),
-      r
-        .table('Team')
-        .get(teamId)
-        .update({lastMeetingType: meetingType})
-        .run(),
-      r
-        .table('AgendaItem')
-        .getAll(r.args(agendaItemIds))
-        .update({meetingId: meeting.id})
-        .run(),
+      r.table('MeetingMember').insert(meetingMembers).run(),
+      r.table('Team').get(teamId).update({lastMeetingType: meetingType}).run(),
+      r.table('AgendaItem').getAll(r.args(agendaItemIds)).update({meetingId: meeting.id}).run()
     ])
 
     startSlackMeeting(meeting.id, teamId, dataLoader).catch(console.log)

@@ -1,13 +1,13 @@
 import {GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType} from 'graphql'
 import {TierEnum as TierEnumDB} from 'parabol-client/types/graphql'
 import getRethink from '../../database/rethinkDriver'
-import OrganizationUser from '../../database/types/OrganizationUser'
+import errorFilter from '../errorFilter'
 import {GQLContext} from '../graphql'
 import GraphQLISO8601Type from './GraphQLISO8601Type'
 import Organization from './Organization'
 import TierEnum from './TierEnum'
 
-const Company = new GraphQLObjectType<any, GQLContext, any>({
+const Company = new GraphQLObjectType<any, GQLContext>({
   name: 'Company',
   description: 'A grouping of organizations. Automatically grouped by top level domain of each',
   fields: () => ({
@@ -32,9 +32,9 @@ const Company = new GraphQLObjectType<any, GQLContext, any>({
       resolve: async ({id: domain}, _args, {dataLoader}) => {
         const organizations = await dataLoader.get('organizationsByActiveDomain').load(domain)
         const orgIds = organizations.map(({id}) => id)
-        const organizationUsersByOrgId = (await dataLoader
-          .get('organizationUsersByOrgId')
-          .loadMany(orgIds)) as OrganizationUser[]
+        const organizationUsersByOrgId = (
+          await dataLoader.get('organizationUsersByOrgId').loadMany(orgIds)
+        ).filter(errorFilter)
         const organizationUsers = organizationUsersByOrgId.flat()
         const activeOrganizationUsers = organizationUsers.filter(
           (organizationUser) => !organizationUser.inactive
@@ -52,9 +52,12 @@ const Company = new GraphQLObjectType<any, GQLContext, any>({
         const r = await getRethink()
         const organizations = await dataLoader.get('organizationsByActiveDomain').load(domain)
         const orgIds = organizations.map(({id}) => id)
-        const teamsByOrgId = await dataLoader.get('teamsByOrgId').loadMany(orgIds)
+        const teamsByOrgId = (await dataLoader.get('teamsByOrgId').loadMany(orgIds)).filter(
+          errorFilter
+        )
         const teams = teamsByOrgId.flat()
         const teamIds = teams.map(({id}) => id)
+        if (teamIds.length === 0) return 0
         const lastMetAt = await r
           .table('NewMeeting')
           .getAll(r.args(teamIds), {index: 'teamId'})
@@ -71,9 +74,12 @@ const Company = new GraphQLObjectType<any, GQLContext, any>({
         const r = await getRethink()
         const organizations = await dataLoader.get('organizationsByActiveDomain').load(domain)
         const orgIds = organizations.map(({id}) => id)
-        const teamsByOrgId = await dataLoader.get('teamsByOrgId').loadMany(orgIds)
+        const teamsByOrgId = (await dataLoader.get('teamsByOrgId').loadMany(orgIds)).filter(
+          errorFilter
+        )
         const teams = teamsByOrgId.flat()
         const teamIds = teams.map(({id}) => id)
+        if (teamIds.length === 0) return 0
         return r
           .table('NewMeeting')
           .getAll(r.args(teamIds), {index: 'teamId'})
@@ -90,9 +96,12 @@ const Company = new GraphQLObjectType<any, GQLContext, any>({
         const r = await getRethink()
         const organizations = await dataLoader.get('organizationsByActiveDomain').load(domain)
         const orgIds = organizations.map(({id}) => id)
-        const teamsByOrgId = await dataLoader.get('teamsByOrgId').loadMany(orgIds)
+        const teamsByOrgId = (await dataLoader.get('teamsByOrgId').loadMany(orgIds)).filter(
+          errorFilter
+        )
         const teams = teamsByOrgId.flat()
         const teamIds = teams.map(({id}) => id)
+        if (teamIds.length === 0) return 0
         return (
           r
             .table('NewMeeting')
@@ -173,9 +182,9 @@ const Company = new GraphQLObjectType<any, GQLContext, any>({
       resolve: async ({id: domain}, _args, {dataLoader}) => {
         const organizations = await dataLoader.get('organizationsByActiveDomain').load(domain)
         const orgIds = organizations.map(({id}) => id)
-        const organizationUsersByOrgId = (await dataLoader
-          .get('organizationUsersByOrgId')
-          .loadMany(orgIds)) as OrganizationUser[]
+        const organizationUsersByOrgId = (
+          await dataLoader.get('organizationUsersByOrgId').loadMany(orgIds)
+        ).filter(errorFilter)
         const organizationUsers = organizationUsersByOrgId.flat()
         const userIds = organizationUsers.map((organizationUser) => organizationUser.userId)
         const uniqueUserIds = new Set(userIds)

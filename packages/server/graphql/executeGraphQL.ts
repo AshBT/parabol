@@ -4,10 +4,11 @@
   It is NOT used for subscription source streams, since those require state
   It IS used to transform a source stream into a response stream
  */
-import {ExecutionResult, graphql} from 'graphql'
-import {ExecutionResultDataDefault} from 'graphql/execution/execute'
+import {graphql} from 'graphql'
+import {FormattedExecutionResult} from 'graphql/execution/execute'
 import getRethink from '../database/rethinkDriver'
 import AuthToken from '../database/types/AuthToken'
+import PROD from '../PROD'
 import CompiledQueryCache from './CompiledQueryCache'
 import getDataLoader from './getDataLoader'
 import getRateLimiter from './getRateLimiter'
@@ -15,7 +16,6 @@ import privateSchema from './intranetSchema/intranetSchema'
 import publicSchema from './rootSchema'
 
 export interface GQLRequest {
-  jobId: string
   authToken: AuthToken
   ip?: string
   socketId?: string
@@ -45,15 +45,13 @@ const LOG_BATCH_SIZE = 50
 const flushLogToDB = async () => {
   if (REQUESTS.length === 0) return
   const r = await getRethink()
-  r.table('GQLRequest')
-    .insert(REQUESTS)
-    .run()
+  r.table('GQLRequest').insert(REQUESTS).run()
   REQUESTS.length = 0
 }
 
 // setInterval(flushLogToDB, ms('10m'))
 
-const executeGraphQL = async <T = ExecutionResultDataDefault>(req: GQLRequest) => {
+const executeGraphQL = async (req: GQLRequest) => {
   const {
     ip,
     authToken,
@@ -74,7 +72,7 @@ const executeGraphQL = async <T = ExecutionResultDataDefault>(req: GQLRequest) =
   const schema = isPrivate ? privateSchema : publicSchema
   const variableValues = variables
   const source = query!
-  let response: ExecutionResult<T>
+  let response: FormattedExecutionResult
   const start = Date.now()
   if (isAdHoc) {
     response = await graphql({schema, source, variableValues, contextValue})
@@ -87,10 +85,13 @@ const executeGraphQL = async <T = ExecutionResultDataDefault>(req: GQLRequest) =
         rootValue,
         contextValue,
         variableValues
-      )) as any) as ExecutionResultDataDefault
+      )) as any) as FormattedExecutionResult
     } else {
       response = {errors: [new Error(`DocumentID not found: ${docId}`)] as any}
     }
+  }
+  if (!PROD && response.errors) {
+    console.trace({error: JSON.stringify(response.errors)})
   }
   const end = Date.now()
   const duration = end - start

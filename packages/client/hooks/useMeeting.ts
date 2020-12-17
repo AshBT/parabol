@@ -16,8 +16,9 @@ import useHandleMenuClick from './useHandleMenuClick'
 import useMeetingLocalState from './useMeetingLocalState'
 import useMobileSidebarDefaultClosed from './useMobileSidebarDefaultClosed'
 import useResumeFacilitation from './useResumeFacilitation'
-import useSwarm from './useSwarm'
+import useMediaRoom from './useMediaRoom'
 import useToggleSidebar from './useToggleSidebar'
+import {MeetingTypeEnum} from '~/types/graphql'
 
 const useMeeting = (meetingRef: any) => {
   const meeting = readInlineData<useMeeting_meeting>(
@@ -30,6 +31,7 @@ const useMeeting = (meetingRef: any) => {
         ...useResumeFacilitation_meeting
         ...useAutoCheckIn_meeting
         id
+        meetingType
         name
         showSidebar
         team {
@@ -40,13 +42,13 @@ const useMeeting = (meetingRef: any) => {
     `,
     meetingRef
   )
-  const {id: meetingId, name: meetingName, team} = meeting
+  const {id: meetingId, meetingType, name: meetingName, team} = meeting
   const {id: teamId, name: teamName} = team
   const gotoStageId = useGotoStageId(meeting)
   const handleGotoNext = useGotoNext(meeting, gotoStageId)
   const safeRoute = useMeetingLocalState(meeting)
   useResumeFacilitation(meeting)
-  useEndMeetingHotkey(meetingId)
+  useEndMeetingHotkey(meetingId, meetingType as MeetingTypeEnum)
   useGotoNextHotkey(handleGotoNext.gotoNext)
   useGotoPrevHotkey(meeting, gotoStageId)
   // save a few cycles
@@ -56,7 +58,7 @@ const useMeeting = (meetingRef: any) => {
   const toggleSidebar = useToggleSidebar(meetingId)
   const handleMenuClick = useHandleMenuClick(teamId, isDesktop)
   useMobileSidebarDefaultClosed(isDesktop, meetingId)
-  const {streams, swarm} = useSwarm(teamId)
+  const {room, peers, consumers, producers, mediaRoom} = useMediaRoom(meetingId, teamId)
   useAutoCheckIn(meeting)
   return {
     demoPortal,
@@ -64,8 +66,11 @@ const useMeeting = (meetingRef: any) => {
     gotoStageId,
     safeRoute,
     toggleSidebar,
-    streams,
-    swarm,
+    room,
+    peers,
+    consumers,
+    producers,
+    mediaRoom,
     isDesktop,
     handleMenuClick
   }
