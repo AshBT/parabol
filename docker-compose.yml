@@ -30,10 +30,23 @@ services:
     depends_on:
       - db
       - redis
+    labels:
+      - traefik.backend=retro
+      - traefik.frontend.rule=Host:retro.agilitytools.online
+      - traefik.docker.network=web
+      - traefik.port=3000
+      - traefik.docker.network=traefik_default
+    
     networks:
       - parabol-network
+      - web
+      - default
 networks:
   parabol-network:
+  web:
+    external: true
+  internal:
+    external: false
 volumes:
   redis-data: {}
   rethink-data: {}
